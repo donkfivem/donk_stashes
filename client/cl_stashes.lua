@@ -1,4 +1,4 @@
-local QBCore = exports['qb-core']:GetCoreObject()
+local QBX = exports.qbx_core
 local ox_inventory = exports.ox_inventory
 
 Citizen.CreateThread(function()
@@ -14,7 +14,7 @@ Citizen.CreateThread(function()
         wait = 5
         inZone  = true
         if IsControlJustReleased(0, 38) then
-            TriggerEvent('qb-business:client:openStash', k, Config.Stashes[k].stashName)
+            TriggerEvent('donk_stashes:client:openStash', k, Config.Stashes[k].stashName)
         end
         break
         else
@@ -33,42 +33,50 @@ Citizen.CreateThread(function()
     end
 end)
 
-RegisterNetEvent('qb-business:client:openStash', function(currentstash, stash)
-    local PlayerData = QBCore.Functions.GetPlayerData()
+RegisterNetEvent('donk_stashes:client:openStash', function(currentstash, stash)
+    local PlayerData = QBX:GetPlayerData()
     local PlayerJob = PlayerData.job.name
     local PlayerJobGrade = PlayerData.job.grade.level
     local PlayerGang = PlayerData.gang.name
     local PlayerGangGrade = PlayerData.gang.grade.level
     local canOpen = false
+    
     if Config.PoliceOpen and not Config.Stashes[currentstash].jobrequired then 
         if PlayerData.job.type and PlayerData.job.type == "leo" then
             canOpen = true
         end
     end
+    
     if Config.Stashes[currentstash].jobrequired then 
         if (PlayerJob == Config.Stashes[currentstash].job) and (PlayerJobGrade >= Config.Stashes[currentstash].grade) then
             canOpen = true
         end
     end
+    
     if Config.Stashes[currentstash].requirecid then
         for k, v in pairs (Config.Stashes[currentstash].cid) do 
-            if QBCore.Functions.GetPlayerData().citizenid == v then
+            if QBX:GetPlayerData().citizenid == v then
                 canOpen = true
             end
         end
     end
+    
     if Config.Stashes[currentstash].gangrequired then
-        local gang = exports['av_gangs']:getGang()
-        if (((PlayerGang == Config.Stashes[currentstash].gang) and (PlayerGangGrade >= Config.Stashes[currentstash].grade)) or (gang and gang.name == Config.Stashes[currentstash].gang)) then
+        if (PlayerGang == Config.Stashes[currentstash].gang) and (PlayerGangGrade >= Config.Stashes[currentstash].grade) then
             canOpen = true
         end
     end
+    
     if canOpen then 
         if ox_inventory:openInventory('stash', Config.Stashes[currentstash].stashName) == false then
-            TriggerServerEvent('donk-stashes:server:loadStashes', Config.Stashes[currentstash].stashName, Config.Stashes[currentstash].stashName, Config.Stashes[currentstash].stashSlots, Config.Stashes[currentstash].stashSize, Config.Stashes[currentstash].coords)
+            TriggerServerEvent('donk_stashes:server:loadStashes', Config.Stashes[currentstash].stashName, Config.Stashes[currentstash].stashName, Config.Stashes[currentstash].stashSlots, Config.Stashes[currentstash].stashSize, Config.Stashes[currentstash].coords)
             ox_inventory:openInventory('stash', Config.Stashes[currentstash].stashName)
         end
     else
-        QBCore.Functions.Notify('You cannot open this', 'error')
+        lib.notify({
+            title = 'Access Denied',
+            description = 'You cannot open this',
+            type = 'error'
+        })
     end
 end)

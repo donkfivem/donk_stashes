@@ -9,10 +9,14 @@ lua54 'yes'
 
 shared_scripts {
     '@ox_lib/init.lua',
+    '@qbx_core/modules/lib.lua',
     'config.lua',
 }
 
-client_script 'client/*.lua'
+client_scripts {
+    'client/*.lua',
+    '@qbx_core/modules/playerdata.lua',
+}
 
 server_script 'server/*.lua'
 
